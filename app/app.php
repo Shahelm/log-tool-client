@@ -7,7 +7,7 @@ use Symfony\Component\Console\Helper\HelperSet;
 $app = new Application();
 
 $helperSet = new HelperSet(array(
-    'httpClient'    => new \Lib\HttpHelper(),
+    'httpClient' => new \Lib\HttpHelper(),
 ));
 
 $app->setHelperSet($helperSet);

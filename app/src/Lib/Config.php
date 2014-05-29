@@ -5,12 +5,18 @@ class Config
 {
     private $separator = '.';
 
+    /**
+     * @var array 
+     */
     private $config;
-
+    
+    /**
+     * @var Config
+     */
     private static $instance;
 
     /**
-     * gets the instance via lazy initialization (created on first usage)
+     * Gets the instance via lazy initialization (created on first usage)
      *
      * @return self
      */
@@ -29,6 +35,18 @@ class Config
     }
 
     /**
+     * Function return value by key. 
+     * If the key is present in the '.' it means to get a child section.
+     *
+     * Example config:
+     * return array(
+     *    'key' => array('child-key' => value),
+     * );
+     * 
+     * 
+     * Example of using:
+     * Config::getInstance()->get('key.child-key') - return value for child-key
+     * 
      * @param string $queryString
      *
      * @return array|string

@@ -11,6 +11,11 @@ use Symfony\Component\Console\Input\InputOption;
 
 class StartCommand extends Command 
 {
+    /**
+     * Storage script errors.
+     * 
+     * @var array
+     */
     private $errorMessages = array();
 
     /**
@@ -70,7 +75,7 @@ EOT
         TempStorage::getInstance()->savePid();
        
         while (true) {
-            $numberOfErrors = $this->getNumberOfErrors();
+            $numberOfErrors = $this->getErrorsForLastMinutes();
             
             if ($numberOfErrors >= $this->numberOfErrors) {
                 Notifier::getInstance()->notify($numberOfErrors,  $this->getLastErrorTime());
@@ -81,7 +86,7 @@ EOT
     }
 
     /**
-     * Функция проверяет входящие данные: 
+     * This function checks input data. 
      *     time-out > self::MIN_TIME_OUT
      *     number-of-errors > 0
      * 
@@ -105,7 +110,7 @@ EOT
     }
 
     /**
-     * Функция проверяет наличие расширения Curl.
+     * The function checks to see whether Curl.
      * 
      * @return bool
      */
@@ -122,7 +127,7 @@ EOT
     }
     
     /**
-     * Функция выводит сообщения об ошибках и завершает сценарий.
+     * Function displays error messages and terminate the script.
      * 
      * @param OutputInterface $output
      * 
@@ -138,9 +143,9 @@ EOT
     }
 
     /**
-     * Функция возвращает время возникновения последней ошибки.
+     * The function returns time of last error.
      * 
-     * @return bool
+     * @return int|bool(false)
      */
     private function getLastErrorTime()
     {
@@ -162,15 +167,35 @@ EOT
     }
 
     /**
-     * Функци возвращае количество ошибок за последнию минуту.
+     * The function returns the number of errors in the last minute.
      * 
-     * @return bool
+     * @return int|bool(false)
      */
-    public function getNumberOfErrors()
+    public function getErrorsForLastMinutes()    
     {
-        $timeIntervalPattern = '{timeInterval}';
-        
-        $interval = 'PT1M';
+        return $this->getNumberOfErrors('PT1M');
+    }
+
+    /**
+     * The function returns the number of errors in the last five minute.
+     * 
+     * @return int|bool(false)
+     */
+    public function getErrorsForLastFiveMinutes()
+    {
+        return $this->getNumberOfErrors('PT5M');
+    }
+    
+    /**
+     * The function returns the number of errors for the time interval.
+     *
+     * @param string $interval (PT1M | PT5M)
+     * 
+     * @return int|bool(false)
+     */
+    private function getNumberOfErrors($interval)
+    {
+        $timeIntervalPattern = '{timeInterval}';                
         
         $url = str_replace($timeIntervalPattern, $interval, $this->getApiUrl('number-of-errors'));        
 
@@ -190,7 +215,7 @@ EOT
     }
 
     /**
-     * Функция возвращает url по api url name.
+     * The function returns the url by api url-name.
      * 
      * @param string $urlName
      * 

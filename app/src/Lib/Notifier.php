@@ -6,9 +6,23 @@ class Notifier
     private static $instance;
     
     private $expireTime = 2000;
+
+    /**
+     * Specifies the urgency level (low, normal, critical)
+     * 
+     * This option belongs notify-send command from ubuntu kernel. (http://help.ubuntu.ru/wiki/notify-osd)
+     * 
+     * @var string
+     */
+    private $urgency = 'critical';
     
-    private $urgency = 'critical';    
-    
+    /**
+     * Specifies an icon filename or stock icon to display.
+     * 
+     * This option belongs notify-send command from ubuntu kernel. (http://help.ubuntu.ru/wiki/notify-osd)
+     * 
+     * @var string
+     */
     private $logoName = 'error';
     
     /**
@@ -43,7 +57,7 @@ class Notifier
     }
 
     /**
-     * Функция возвращает заголовок оповещения.
+     * The function returns the title to alert.
      * 
      * @return string
      */
@@ -53,10 +67,10 @@ class Notifier
     }
 
     /**
-     * Функция подготавливает сообщения.
+     * The function prepares a message to send to the command notify-send.
      * 
-     * @param int $errorCount - количество ошибок
-     * @param int $lastErrorTime - timestamp (время возникновения последней ошибки)
+     * @param int $errorCount
+     * @param int $lastErrorTime - timestamp (time of the last error)
      * 
      * @return string
      */
@@ -72,7 +86,7 @@ class Notifier
     }
 
     /**
-     * Функция подготавливает строку опция для команды notify-send.
+     * The function prepares command line option for command notify-send.
      * 
      * @return string
      */
@@ -84,6 +98,4 @@ class Notifier
     private function __construct() { }
     
     private function __clone() { }
-
-    private function __wakeup() { }
 } 

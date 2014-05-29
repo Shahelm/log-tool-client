@@ -1,7 +1,7 @@
 <?php
 return array(
     'host'              => 'http://log-tool.carid.com/',
-    'time-out'          => 60, // Интервал времени через которые производится проверка новых ошибок
+    'time-out'          => 60, //The time interval over which checks new errors.
     'min-time-out'      => 60,
     'number-of-errors'  => 200,
     'temp-file-name'    => 'log-tool-temp.txt',

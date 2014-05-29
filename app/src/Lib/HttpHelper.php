@@ -7,8 +7,6 @@ use Symfony\Component\Console\Helper\Helper;
 class HttpHelper extends Helper 
 {
     /**
-     * Doctrine ORM EntityManagerInterface.
-     *
      * @var Client
      */
     protected $httpClient;

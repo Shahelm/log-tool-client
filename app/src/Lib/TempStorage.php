@@ -4,17 +4,25 @@ namespace Lib;
 class TempStorage
 {
     /**
-     * @var self reference to singleton instance
+     * @var TempStorage
      */
     private static $instance;
     
+    /**
+     * Path to temp dir in file system.
+     * 
+     * @var string
+     */
     private $dir;
     
+    /**
+     * Name of the temporary file in the temporary directory.
+     * 
+     * @var string
+     */
     private $fileName;
     
     /**
-     * gets the instance via lazy initialization (created on first usage)
-     *
      * @return self
      */
     public static function getInstance()
@@ -27,10 +35,6 @@ class TempStorage
         return static::$instance;
     }
 
-    /**
-     * is not allowed to call from outside: private!
-     *
-     */
     private function __construct()
     {
         $this->dir = sys_get_temp_dir();
@@ -38,15 +42,29 @@ class TempStorage
         $this->fileName = Config::getInstance()->get('temp-file-name'); 
     }
 
+    /**
+     * Function save process id in temp file.
+     *
+     * @return bool
+     */
     public function savePid()
     {
+        $return = false;
+        
         $pid = getmypid();
         
         if ($pid > 0) {
-            $this->write($pid);
+            $return = $this->write($pid);
         }
+        
+        return !empty($return) ? true : false;
     }
-    
+
+    /**
+     * Function return process id client log tool from temp file.
+     * 
+     * @return string
+     */
     public function getPid()
     {
         $handle = $this->openTempFile('r');
@@ -56,40 +74,73 @@ class TempStorage
         return $pid;
     }
    
+    /**
+     * Function check write permissions for the temporary directory.
+     * 
+     * @return bool
+     */
     public function isWritable()
     {
         return is_writable($this->dir);
     }
-    
+
+    /**
+     * Function delete temp file from temp dir.
+     *
+     * @return bool 
+     */
     public function deleteTempFile()
     {
+        $return = false;
+        
         if (is_file($this->getFilePath())) {
-            unlink($this->getFilePath());
+            $return = unlink($this->getFilePath());
         }
+        
+        return $return;
     }
-    
-    private function write($data)
+
+    /**
+     * Function write to temp file process id.
+     * 
+     * @param int $pid
+     *
+     * @return bool
+     */
+    private function write($pid)
     {
         $file = $this->openTempFile('w');
 
-        fwrite($file, $data);
+        $return = fwrite($file, $pid);
         
         fclose($file);
+        
+        return !empty($return) ? true : false;
     }
 
+    /**
+     * Function open temp file and return file descriptor.
+     * 
+     * @param string $mode
+     * 
+     * @return resource
+     */
     private function openTempFile($mode)
     {
         return fopen($this->getFilePath(), $mode);
     }
- 
+
+    /**
+     * Function return path for temp file.
+     * 
+     * @return string
+     */
     private function getFilePath()
     {
         return $this->dir . DIRECTORY_SEPARATOR . $this->fileName;
     }
     
     private function __clone() { }
-
-    private function __wakeup() { }
 }
 
  
