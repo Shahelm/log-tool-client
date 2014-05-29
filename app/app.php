@@ -2,27 +2,18 @@
 require_once 'bootstrap.php';
 
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Helper\HelperSet;
 
 $app = new Application();
 
-$client = new Guzzle\Http\Client();
+$helperSet = new HelperSet(array(
+    'httpClient'    => new \Lib\HttpHelper(),
+));
 
-/**
- * @var \Guzzle\Http\Message\Request $response
- */
-$response = $client->get('http://dev.log-tool.loc/api/time-last-error');
+$app->setHelperSet($helperSet);
 
-$response->send();
+$app->add(new \Commands\StartCommand());
 
-$res = $response->getResponse();
-echo "\n";
-print_r('<pre>');print_r($res->getHeaderLines());print_r('</pre>');
-echo "\n";
-print_r('<pre>');print_r($res->getStatusCode());print_r('</pre>');
-echo "\n";
-print_r('<pre>');print_r($res->getBody(true));print_r('</pre>');
-echo "\n";
-echo "\n";
-//var_export($response->json());
+$app->add(new \Commands\StopCommand());
 
-//$app->run();
+$app->run();
