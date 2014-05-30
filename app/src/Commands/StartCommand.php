@@ -27,6 +27,11 @@ class StartCommand extends Command
      * @var int
      */
     private $numberOfErrors;
+
+    /**
+     * @var int
+     */
+    private $lifeTimePopup;
     
     /**
      * {@inheritdoc}
@@ -47,6 +52,12 @@ class StartCommand extends Command
                     'The number of errors that call alert.',
                     $defaultNumberOfErrors = $this->getConfig()->get('number-of-errors')
                 ),
+                new InputOption(
+                    'lifetime-popup', null, InputOption::VALUE_OPTIONAL,
+                    'Specifies the time in milliseconds notice will hang on the screen.',
+                    $defaultNumberOfErrors = $this->getConfig()->get('lifetime-popup')
+                ),
+
             ))
             ->setHelp(<<<EOT
 The command to start the client.
@@ -62,19 +73,23 @@ EOT
         $this->timeOut = (int)$input->getOption('time-out');
 
         $this->numberOfErrors = (int)$input->getOption('number-of-errors');
-
+        
+        $this->lifeTimePopup = (int)$input->getOption('lifetime-popup');
+        
         if (!$this->isPossibleRunClient()) {
             $this->outputErrorMessage($output);
         }
         
         TempStorage::getInstance()->savePid();
        
+        $notifier = new Notifier($this->lifeTimePopup);
+        
         while (true) {
             $numberOfErrorsForLastMinutes = $this->getErrorsForLastMinutes();
             $numberOfErrorsForFiveMinutes = $this->getErrorsForLastFiveMinutes();
             
             if ($numberOfErrorsForLastMinutes >= $this->numberOfErrors) {
-                Notifier::getInstance()->notify(
+                $notifier->notify(
                     $numberOfErrorsForLastMinutes,
                     $numberOfErrorsForFiveMinutes,
                     $this->getLastErrorTime()
@@ -121,6 +136,8 @@ EOT
             $this->errorMessages[] = '<error>Error: the number-of-errors must be greater than 0.</error>';
             $return = false;
         }
+        
+        
                 
         return $return;
     }

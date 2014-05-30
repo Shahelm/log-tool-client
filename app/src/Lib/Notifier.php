@@ -3,9 +3,12 @@ namespace Lib;
 
 class Notifier 
 {
-    private static $instance;
-    
-    private $expireTime = 2000;
+    /**
+     * in milliseconds
+     * 
+     * @var int 
+     */
+    private $expireTime;
 
     /**
      * Specifies the urgency level (low, normal, critical)
@@ -24,19 +27,12 @@ class Notifier
      * @var string
      */
     private $logoName = 'error';
-    
-    /**
-     * @return self
-     */
-    public static function getInstance()
+
+    public function __construct($expireTime) 
     {
-        if (null === static::$instance) {
-            static::$instance = new static;
-        }
-
-        return static::$instance;
+        $this->expireTime = $expireTime;
     }
-
+    
     /**
      * This function calls ubuntu function notify-send (http://help.ubuntu.ru/wiki/notify-osd)
      *
@@ -97,8 +93,4 @@ class Notifier
     {
         return '-u ' . $this->urgency . ' -i ' . $this->logoName . ' ' . '-t '. $this->expireTime;
     }
-
-    private function __construct() { }
-    
-    private function __clone() { }
 } 
