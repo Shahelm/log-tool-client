@@ -39,11 +39,12 @@ class Notifier
 
     /**
      * This function calls ubuntu function notify-send (http://help.ubuntu.ru/wiki/notify-osd)
-     * 
+     *
      * @param int $errorCount
+     * @param int $numberOfErrorsForFiveMinutes
      * @param int $lastErrorTime
      */
-    public function notify($errorCount, $lastErrorTime)
+    public function notify($errorCount, $numberOfErrorsForFiveMinutes, $lastErrorTime)
     {
         $command = 'notify-send ';
         
@@ -51,7 +52,7 @@ class Notifier
         
         $command .= '"' . $this->getTitle() . '" ';
         
-        $command .= '"' . $this->getMessage((int)$errorCount, (int)$lastErrorTime) . '" ';
+        $command .= '"' . $this->getMessage((int)$errorCount, (int)$numberOfErrorsForFiveMinutes, (int)$lastErrorTime) . '" ';
         
         exec($command);
     }
@@ -68,15 +69,17 @@ class Notifier
 
     /**
      * The function prepares a message to send to the command notify-send.
-     * 
-     * @param int $errorCount
+     *
+     * @param int $errorLastMinutes
+     * @param int $errorsFiveMinutes
      * @param int $lastErrorTime - timestamp (time of the last error)
-     * 
+     *
      * @return string
      */
-    private function getMessage($errorCount, $lastErrorTime)
+    private function getMessage($errorLastMinutes, $errorsFiveMinutes, $lastErrorTime)
     {
-        $message = 'Error count: ' . $errorCount . "\n";
+        $message = 'Error last minutes: ' . $errorLastMinutes . "\n";
+        $message .= 'Error last five minutes: ' . $errorsFiveMinutes . "\n";
         
         $ukrTime = $lastErrorTime + 28800;
         

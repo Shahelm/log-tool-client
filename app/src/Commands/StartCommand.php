@@ -70,10 +70,15 @@ EOT
         TempStorage::getInstance()->savePid();
        
         while (true) {
-            $numberOfErrors = $this->getErrorsForLastMinutes();
+            $numberOfErrorsForLastMinutes = $this->getErrorsForLastMinutes();
+            $numberOfErrorsForFiveMinutes = $this->getErrorsForLastFiveMinutes();
             
-            if ($numberOfErrors >= $this->numberOfErrors) {
-                Notifier::getInstance()->notify($numberOfErrors,  $this->getLastErrorTime());
+            if ($numberOfErrorsForLastMinutes >= $this->numberOfErrors) {
+                Notifier::getInstance()->notify(
+                    $numberOfErrorsForLastMinutes,
+                    $numberOfErrorsForFiveMinutes,
+                    $this->getLastErrorTime()
+                );
             }
             
             sleep($this->timeOut);
