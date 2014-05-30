@@ -63,15 +63,10 @@ EOT
 
         $this->numberOfErrors = (int)$input->getOption('number-of-errors');
 
-        if (!$this->validateInput() || !$this->checkCurl()) {
+        if (!$this->isPossibleRunClient()) {
             $this->outputErrorMessage($output);
         }
-
-        if (!TempStorage::getInstance()->isWritable()) {
-            //TODO Добавь вывод ошибки в консоль + перенести выше в if
-            die(0);
-        }
-
+        
         TempStorage::getInstance()->savePid();
        
         while (true) {
@@ -85,6 +80,22 @@ EOT
         }
     }
 
+    /**
+     * The function returns true if all the conditions for starting are fulfilled.
+     * 
+     * @return bool
+     */
+    private function isPossibleRunClient()
+    {
+        $return = true;
+        
+        if (!$this->validateInput() || !$this->checkCurl() || !$this->checkTempDir()) {
+            $return = false;
+        }
+
+        return $return;
+    }
+    
     /**
      * This function checks input data. 
      *     time-out > self::MIN_TIME_OUT
@@ -121,6 +132,22 @@ EOT
         if (!extension_loaded('curl')) {
             $this->errorMessages[] = '<error>Error: the PHP cURL extension must be installed!</error>';
             $return = false;
+        }
+        
+        return $return;
+    }
+
+    /**
+     * The function checks the availability of the temporary directory.
+     * 
+     * @return bool
+     */
+    private function checkTempDir()
+    {
+        $return = true;
+        
+        if (!TempStorage::getInstance()->isWritable()) {
+            $this->errorMessages[] = '<error>Error: temp dir must be writable!</error>';
         }
         
         return $return;
