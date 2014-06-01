@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+
+<?php
+$rootPath = realpath(__DIR__ . '/../');
+
+@ini_set('phar.readonly', 0);
+
+$pharName = 'log-tool-client.phar';
+
+$phar = new Phar($pharName);
+
+$phar->buildFromDirectory($rootPath);
+
+$phar->setStub($phar->createDefaultStub('../bin/log-tool-client'));
