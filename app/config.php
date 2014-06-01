@@ -1,10 +1,12 @@
 <?php
 return array(
-    'host'              => 'http://log-tool.carid.com/',
-    'time-out'          => 60, //The time interval over which checks new errors.
-    'min-time-out'      => 60,
-    'number-of-errors'  => 200,
-    'lifetime-popup'    => 2000,
+    'host'               => 'http://log-tool.carid.com/',
+    'time-out'           => 60, //The time interval over which checks new errors.
+    'min-time-out'       => 60,
+    'number-of-errors'   => 200,
+    'lifetime-popup'     => 2000,
+    'lifetime-popup-min' => 500,
+    'lifetime-popup-max' => 5000,
     'temp-file-name'    => 'log-tool-temp.txt',
     'api-routes'       => array(
         'get-max-time'                  => 'api/time-last-error',

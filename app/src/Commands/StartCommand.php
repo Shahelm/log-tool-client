@@ -54,10 +54,9 @@ class StartCommand extends Command
                 ),
                 new InputOption(
                     'lifetime-popup', null, InputOption::VALUE_OPTIONAL,
-                    'Specifies the time in milliseconds notice will hang on the screen.',
-                    $defaultNumberOfErrors = $this->getConfig()->get('lifetime-popup')
+                    'Specifies the time in milliseconds notice will hang on the screen. (min values: '. $this->getConfig()->get('lifetime-popup-min') .', max values: ' . $this->getConfig()->get('lifetime-popup-max') . ')',
+                    $lifetimePopup = $this->getConfig()->get('lifetime-popup')
                 ),
-
             ))
             ->setHelp(<<<EOT
 The command to start the client.
@@ -128,7 +127,8 @@ EOT
         $return = true;
         
         if ($this->timeOut < $this->getConfig()->get('min-time-out')) {
-            $this->errorMessages[] = '<error>Error: the time-out must be greater than ' . $this->getConfig()->get('min-time-out') . '.</error>';
+            $this->errorMessages[] = '<error>Error: the time-out must be greater than ' . 
+                                     $this->getConfig()->get('min-time-out') . '.</error>';
             $return = false;
         }
         
@@ -137,7 +137,14 @@ EOT
             $return = false;
         }
         
+        $lifetimePopupMin = $this->getConfig()->get('lifetime-popup-min');
+        $lifetimePopupMax = $this->getConfig()->get('lifetime-popup-max');
         
+        if ($this->lifeTimePopup > $lifetimePopupMax || $this->lifeTimePopup < $lifetimePopupMin) {
+            $this->errorMessages[] = '<error>Error: the lifetime-popup must be greater than ' . $lifetimePopupMin . 
+                                     ' and less ' . $lifetimePopupMax . '.</error>';
+            $return = false;            
+        }
                 
         return $return;
     }
