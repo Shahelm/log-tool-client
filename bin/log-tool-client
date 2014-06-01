@@ -1,5 +1,7 @@
+#!/usr/bin/env php
+
 <?php
-require_once 'bootstrap.php';
+require_once __DIR__ . '/../app/bootstrap.php';
 
 use Lib\HttpHelper;
 use Lib\Storage\StorageHelper;
