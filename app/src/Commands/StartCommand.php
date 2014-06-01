@@ -3,7 +3,7 @@ namespace Commands;
 
 use Lib\Config;
 use Lib\Notifier;
-use Lib\TempStorage;
+use Lib\OSHelper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,6 +33,11 @@ class StartCommand extends Command
      */
     private $lifeTimePopup;
     
+    /**
+     * @var int
+     */
+    private $pid;
+
     /**
      * {@inheritdoc}
      */
@@ -69,21 +74,19 @@ EOT
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->timeOut = (int)$input->getOption('time-out');
-
-        $this->numberOfErrors = (int)$input->getOption('number-of-errors');
-        
-        $this->lifeTimePopup = (int)$input->getOption('lifetime-popup');
+        $this->init($input);
         
         if (!$this->isPossibleRunClient()) {
             $this->outputErrorMessage($output);
         }
-        
-        TempStorage::getInstance()->savePid();
-       
+              
         $notifier = new Notifier($this->lifeTimePopup);
         
-        while (true) {
+        while (true) {            
+            if (!$this->getStorage()->get('isEnabled')) {
+                break;
+            }
+            
             $numberOfErrorsForLastMinutes = $this->getErrorsForLastMinutes();
             $numberOfErrorsForFiveMinutes = $this->getErrorsForLastFiveMinutes();
             
@@ -100,6 +103,28 @@ EOT
     }
 
     /**
+     * @param $input
+     */
+    private function init(InputInterface $input)
+    {
+        $this->timeOut = (int)$input->getOption('time-out');
+
+        $this->numberOfErrors = (int)$input->getOption('number-of-errors');
+
+        $this->lifeTimePopup = (int)$input->getOption('lifetime-popup');
+
+        $osHelper = new OSHelper();
+
+        $this->pid = $osHelper->getProcessId();
+
+        $this->getStorage()->flushAll();
+
+        $this->getStorage()->save('isEnabled', true);
+
+        $this->getStorage()->save('pid', $this->pid);
+    }
+    
+    /**
      * The function returns true if all the conditions for starting are fulfilled.
      * 
      * @return bool
@@ -108,7 +133,7 @@ EOT
     {
         $return = true;
         
-        if (!$this->validateInput() || !$this->checkCurl() || !$this->checkTempDir()) {
+        if (!$this->validateInput() || !$this->checkCurl() || !$this->checkStorage() || !$this->checkProcessId()) {
             $return = false;
         }
 
@@ -171,12 +196,32 @@ EOT
      * 
      * @return bool
      */
-    private function checkTempDir()
+    private function checkStorage()
     {
         $return = true;
         
-        if (!TempStorage::getInstance()->isWritable()) {
-            $this->errorMessages[] = '<error>Error: temp dir must be writable!</error>';
+        try {            
+            $this->getStorage();
+        } catch (\InvalidArgumentException $e) {
+            $this->errorMessages[] = '<error>Error: ' . $e->getMessage() . '</error>';
+            $return = false;
+        }
+        
+        return $return;
+    }
+
+    /**
+     * The function checks whether it was possible to get the process id.
+     * 
+     * @return bool
+     */
+    private function checkProcessId()
+    {
+        $return = true;
+        
+        if ($this->pid <= 0) {
+            $this->errorMessages[] = '<error>Error: Failed to get the process Id.</error>';
+            $return = false;
         }
         
         return $return;
@@ -302,5 +347,13 @@ EOT
     private function getConfig()
     {
         return Config::getInstance();
+    }
+
+    /**
+     * @return \Lib\Storage\Storage
+     */
+    private function getStorage()
+    {
+        return $this->getHelper('storageHelper')->getStorage();
     }
 }
