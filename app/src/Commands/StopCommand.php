@@ -1,7 +1,7 @@
 <?php
 namespace Commands;
 
-use Lib\TempStorage;
+use Lib\Storage\Storage;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,11 +13,10 @@ class StopCommand extends Command
      */
     protected function configure()
     {
-        $this
-            ->setName('log-tool:stop')
-            ->setDescription('Command stops the log-tool-client.')
-            ->setDefinition(array())
-            ->setHelp(<<<EOT
+        $this->setName('log-tool:stop')
+             ->setDescription('Command stops the log-tool-client.')
+             ->setDefinition(array())
+             ->setHelp(<<<EOT
 Command stops the log-tool-client.
 EOT
             );
@@ -28,17 +27,11 @@ EOT
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $pid = TempStorage::getInstance()->getPid();
+        /**
+         * @var Storage $storage
+         */
+        $storage = $this->getHelper('storageHelper')->getStorage();
         
-        TempStorage::getInstance()->deleteTempFile();
-        
-        exec($this->getCommand($pid));
-    }
-    
-    private function getCommand($pid)
-    {
-        $pid = (int)$pid;
-        
-        return 'kill ' . $pid;
-    }
+        $storage->flushAll();
+    }    
 }
