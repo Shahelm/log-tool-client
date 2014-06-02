@@ -3,10 +3,11 @@ require_once __DIR__ . '/../app/bootstrap.php';
 
 use Lib\HttpHelper;
 use Lib\Storage\StorageHelper;
+use Lib\Config;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Helper\HelperSet;
 
-$app = new Application();
+$app = new Application('Log Tool Client', Config::getInstance()->get('version'));
 
 $helperSet = new HelperSet(array(
     'httpClient'    => new HttpHelper(),
