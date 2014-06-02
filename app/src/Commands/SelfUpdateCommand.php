@@ -31,11 +31,7 @@ EOT
         $currentVersion = $this->getClientCurrentVersion();
         
         $version = (float)$this->getClientLatestVersion(); 
-        
-        if (!is_writable(__DIR__)) {
-            $this->outputMessage($output, '<error>The directory must be writable: ' . __DIR__ . '</error>');
-        }
-        
+                
         if ($currentVersion == $version) {
             $this->outputMessage($output, '<info>You have the latest version of the log-tool client!</info>');            
         } elseif ($currentVersion > $version) {
@@ -47,7 +43,7 @@ EOT
         $return = false;
         
         try {
-            $this->saveNewVersionClient($fileName, $this->getNewVersionClient());
+            $return = $this->saveNewVersionClient($fileName, $this->getNewVersionClient());
         } catch (\Exception $e) {
             $output->writeln('<error>Update the client failed.</error>');
             $this->outputMessage($output, '<error> ' . $e->getMessage() . '</error>');
@@ -55,6 +51,8 @@ EOT
         
         if ($return) {
             $this->outputMessage($output, '<info>Update was successful!</info>');
+        } else {
+            $this->outputMessage($output, '<error>Failed to save a new version of the client!</error>');
         }
     }
 
