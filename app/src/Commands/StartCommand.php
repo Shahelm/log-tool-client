@@ -44,7 +44,7 @@ class StartCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('log-tool:start')
+            ->setName('start')
             ->setDescription('The command to start the client.')
             ->setDefinition(array(
                 new InputOption(

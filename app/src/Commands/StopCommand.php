@@ -13,7 +13,7 @@ class StopCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('log-tool:stop')
+        $this->setName('stop')
              ->setDescription('Command stops the log-tool-client.')
              ->setDefinition(array())
              ->setHelp(<<<EOT
