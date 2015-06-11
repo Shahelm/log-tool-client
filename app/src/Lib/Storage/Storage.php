@@ -1,7 +1,12 @@
 <?php
 namespace Lib\Storage;
 
-class Storage 
+/**
+ * Class Storage
+ *
+ * @package Lib\Storage
+ */
+class Storage
 {
     /**
      * @var IStorage
@@ -72,4 +77,4 @@ class Storage
     {
         return $this->storage->flushAll();
     }
-} 
+}

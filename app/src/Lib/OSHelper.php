@@ -1,11 +1,16 @@
 <?php
 namespace Lib;
 
-class OSHelper 
+/**
+ * Class OSHelper
+ *
+ * @package Lib
+ */
+class OSHelper
 {
     /**
      * The function returns the current process id.
-     * 
+     *
      * @return int|bool(false)
      */
     public function getProcessId()
@@ -14,4 +19,4 @@ class OSHelper
         
         return $pid > 0 ? $pid : false;
     }
-} 
+}

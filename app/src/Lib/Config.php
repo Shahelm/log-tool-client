@@ -1,19 +1,24 @@
 <?php
 namespace Lib;
 
+/**
+ * Class Config
+ *
+ * @package Lib
+ */
 class Config
 {
     private $separator = '.';
 
     /**
-     * @var array 
+     * @var array
      */
     private $config;
     
     /**
      * @var Config
      */
-    private static $instance;
+    protected static $instance;
 
     /**
      * Gets the instance via lazy initialization (created on first usage)
@@ -29,24 +34,23 @@ class Config
         return static::$instance;
     }
     
-    private function __construct()
+    protected function __construct()
     {
         $this->config = require_once __DIR__ . '/../../config.php';
     }
 
     /**
-     * Function return value by key. 
+     * Function return value by key.
      * If the key is present in the '.' it means to get a child section.
      *
      * Example config:
      * return array(
      *    'key' => array('child-key' => value),
      * );
-     * 
-     * 
+     *
      * Example of using:
      * Config::getInstance()->get('key.child-key') - return value for child-key
-     * 
+     *
      * @param string $queryString
      *
      * @return array|string
@@ -55,7 +59,7 @@ class Config
      */
     public function get($queryString)
     {
-        if (empty($queryString)) {
+        if ('' === $queryString) {
             throw new \InvalidArgumentException('Query string can not be empty.');
         }
 
@@ -126,4 +130,4 @@ class Config
     {
         return isset($config[$key]);
     }
-} 
+}

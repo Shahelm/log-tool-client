@@ -4,7 +4,12 @@ namespace Lib;
 use Guzzle\Http\Client;
 use Symfony\Component\Console\Helper\Helper;
 
-class HttpHelper extends Helper 
+/**
+ * Class HttpHelper
+ *
+ * @package Lib
+ */
+class HttpHelper extends Helper
 {
     /**
      * @var Client
@@ -16,11 +21,11 @@ class HttpHelper extends Helper
      */
     public function getHttpClient()
     {
-        if (is_null($this->httpClient)) {
+        if (null === $this->httpClient) {
             $this->httpClient = new Client();
         }
         
-        return $this->httpClient; 
+        return $this->httpClient;
     }
     
     /**
@@ -34,4 +39,4 @@ class HttpHelper extends Helper
     {
         return 'httpClient';
     }
-} 
+}

@@ -6,10 +6,15 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class StopCommand
+ *
+ * @package Commands
+ */
 class StopCommand extends Command
 {
     /**
-     * {@inheritdoc}
+     * @throws \InvalidArgumentException
      */
     protected function configure()
     {
@@ -19,7 +24,7 @@ class StopCommand extends Command
              ->setHelp(<<<EOT
 Command stops the log-tool-client.
 EOT
-            );
+                );
     }
 
     /**
@@ -32,6 +37,12 @@ EOT
          */
         $storage = $this->getHelper('storageHelper')->getStorage();
         
-        $storage->flushAll();
-    }    
+        $isFlush = $storage->flushAll();
+        
+        if ($isFlush) {
+            $output->writeln('<info>Stop successful</info>');
+        } else {
+            $output->writeln('<error>Failed to stop. Perhaps the service is already stopped.</error>');
+        }
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace Commands;
 
+use Guzzle\Http\Exception\RequestException;
 use Guzzle\Http\Exception\ServerErrorResponseException;
 use Lib\Config;
 use Lib\Notifier;
@@ -11,11 +12,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
-class StartCommand extends Command 
+/**
+ * Class StartCommand
+ *
+ * @package Commands
+ */
+class StartCommand extends Command
 {
     /**
      * Storage script errors.
-     * 
+     *
      * @var array
      */
     private $errorMessages = array();
@@ -41,7 +47,7 @@ class StartCommand extends Command
     private $pid;
 
     /**
-     * {@inheritdoc}
+     * @throws \InvalidArgumentException
      */
     protected function configure()
     {
@@ -50,18 +56,27 @@ class StartCommand extends Command
             ->setDescription('The command to start the client.')
             ->setDefinition(array(
                 new InputOption(
-                    'time-out', null, InputOption::VALUE_OPTIONAL,
-                    'The time interval (in sec) through which checks errors. (minimum values: ' . $this->getConfig()->get('min-time-out') . ')', 
+                    'time-out',
+                    null,
+                    InputOption::VALUE_OPTIONAL,
+                    $this->getConfig()->get('min-time-out')
+                    . 'The time interval (in sec) through which checks errors. (minimum values: ' . ')',
                     $defaultTimeOut = $this->getConfig()->get('time-out')
                 ),
                 new InputOption(
-                    'number-of-errors', null, InputOption::VALUE_OPTIONAL,
+                    'number-of-errors',
+                    null,
+                    InputOption::VALUE_OPTIONAL,
                     'The number of errors that call alert.',
                     $defaultNumberOfErrors = $this->getConfig()->get('number-of-errors')
                 ),
                 new InputOption(
-                    'lifetime-popup', null, InputOption::VALUE_OPTIONAL,
-                    'Specifies the time in milliseconds notice will hang on the screen. (min values: '. $this->getConfig()->get('lifetime-popup-min') .', max values: ' . $this->getConfig()->get('lifetime-popup-max') . ')',
+                    'lifetime-popup',
+                    null,
+                    InputOption::VALUE_OPTIONAL,
+                    'Specifies the time in milliseconds notice will hang on the screen. (min values: '
+                    . $this->getConfig()->get('lifetime-popup-min') .', max values: '
+                    . $this->getConfig()->get('lifetime-popup-max') . ')',
                     $lifetimePopup = $this->getConfig()->get('lifetime-popup')
                 )
             ))
@@ -72,7 +87,13 @@ EOT
     }
 
     /**
-     * {@inheritdoc}
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @return int|null|void
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -83,9 +104,14 @@ EOT
         }
               
         $notifier = new Notifier($this->lifeTimePopup);
-        
-        while (true) {            
-            if (!$this->getStorage()->get('isEnabled')) {
+
+        /**
+         * @var ConsoleOutputInterface $output
+         */
+        $errorOutput = $output->getErrorOutput();
+
+        while (true) {
+            if (false === $this->getStorage()->get('isEnabled')) {
                 break;
             }
             
@@ -103,11 +129,10 @@ EOT
             } catch (ServerErrorResponseException $e) {
                 $notifier->notifyServicesUnavailable();
                 
-                /**
-                 * @var ConsoleOutputInterface $output
-                 */
-                $errorOutput = $output->getErrorOutput();
                 $errorOutput->writeln($e->getMessage());
+            } catch (\Exception $e) {
+                $errorOutput->writeln('Fatal error: ' . $e->getMessage());
+                $this->getStorage()->flushAll();
             }
             
             sleep($this->timeOut);
@@ -116,6 +141,8 @@ EOT
 
     /**
      * @param $input
+     *
+     * @throws \InvalidArgumentException
      */
     private function init(InputInterface $input)
     {
@@ -138,8 +165,10 @@ EOT
     
     /**
      * The function returns true if all the conditions for starting are fulfilled.
-     * 
+     *
      * @return bool
+     *
+     * @throws \InvalidArgumentException
      */
     private function isPossibleRunClient()
     {
@@ -153,18 +182,20 @@ EOT
     }
     
     /**
-     * This function checks input data. 
+     * This function checks input data.
      *     time-out > self::MIN_TIME_OUT
      *     number-of-errors > 0
-     * 
+     *
      * @return bool
+     *
+     * @throws \InvalidArgumentException
      */
     private function validateInput()
-    {       
+    {
         $return = true;
         
         if ($this->timeOut < $this->getConfig()->get('min-time-out')) {
-            $this->errorMessages[] = '<error>Error: the time-out must be greater than ' . 
+            $this->errorMessages[] = '<error>Error: the time-out must be greater than ' .
                                      $this->getConfig()->get('min-time-out') . '.</error>';
             $return = false;
         }
@@ -178,9 +209,9 @@ EOT
         $lifetimePopupMax = $this->getConfig()->get('lifetime-popup-max');
         
         if ($this->lifeTimePopup > $lifetimePopupMax || $this->lifeTimePopup < $lifetimePopupMin) {
-            $this->errorMessages[] = '<error>Error: the lifetime-popup must be greater than ' . $lifetimePopupMin . 
-                                     ' and less ' . $lifetimePopupMax . '.</error>';
-            $return = false;            
+            $this->errorMessages[] = '<error>Error: the lifetime-popup must be greater than '
+                . $lifetimePopupMin . ' and less ' . $lifetimePopupMax . '.</error>';
+            $return = false;
         }
                 
         return $return;
@@ -188,7 +219,7 @@ EOT
 
     /**
      * The function checks to see whether Curl.
-     * 
+     *
      * @return bool
      */
     private function checkCurl()
@@ -205,14 +236,14 @@ EOT
 
     /**
      * The function checks the availability of the temporary directory.
-     * 
+     *
      * @return bool
      */
     private function checkStorage()
     {
         $return = true;
         
-        try {            
+        try {
             $this->getStorage();
         } catch (\InvalidArgumentException $e) {
             $this->errorMessages[] = '<error>Error: ' . $e->getMessage() . '</error>';
@@ -224,7 +255,7 @@ EOT
 
     /**
      * The function checks whether it was possible to get the process id.
-     * 
+     *
      * @return bool
      */
     private function checkProcessId()
@@ -241,10 +272,12 @@ EOT
     
     /**
      * Function displays error messages and terminate the script.
-     * 
+     *
      * @param OutputInterface $output
-     * 
+     *
      * @return bool
+     *
+     * @throws \InvalidArgumentException
      */
     private function outputErrorMessage(OutputInterface $output)
     {
@@ -257,8 +290,11 @@ EOT
 
     /**
      * The function returns time of last error.
-     * 
+     *
      * @return int|bool(false)
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
     private function getLastErrorTime()
     {
@@ -272,7 +308,7 @@ EOT
         
         $return = false;
         
-        if ($res->getStatusCode() == 200) {
+        if ($res->isSuccessful()) {
             $return = json_decode($res->getBody(true))->sec;
         }
         
@@ -281,18 +317,24 @@ EOT
 
     /**
      * The function returns the number of errors in the last minute.
-     * 
+     *
      * @return int|bool(false)
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
-    public function getErrorsForLastMinutes()    
+    public function getErrorsForLastMinutes()
     {
         return $this->getNumberOfErrors('PT1M');
     }
 
     /**
      * The function returns the number of errors in the last five minute.
-     * 
+     *
      * @return int|bool(false)
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
     public function getErrorsForLastFiveMinutes()
     {
@@ -303,14 +345,17 @@ EOT
      * The function returns the number of errors for the time interval.
      *
      * @param string $interval (PT1M | PT5M)
-     * 
+     *
      * @return int|bool(false)
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
     private function getNumberOfErrors($interval)
     {
-        $timeIntervalPattern = '{timeInterval}';                
+        $timeIntervalPattern = '{timeInterval}';
         
-        $url = str_replace($timeIntervalPattern, $interval, $this->getApiUrl('number-of-errors'));        
+        $url = str_replace($timeIntervalPattern, $interval, $this->getApiUrl('number-of-errors'));
 
         $response = $this->getHttpClient()->get($url);
 
@@ -320,7 +365,7 @@ EOT
 
         $return = false;
 
-        if ($res->getStatusCode() == 200) {
+        if ($res->isSuccessful()) {
             $return = json_decode($res->getBody(true))->count;
         }
         
@@ -329,10 +374,12 @@ EOT
 
     /**
      * The function returns the url by api url-name.
-     * 
+     *
      * @param string $urlName
-     * 
+     *
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     private function getApiUrl($urlName)
     {
@@ -347,6 +394,8 @@ EOT
     
     /**
      * @return \Guzzle\Http\Client
+     *
+     * @throws \InvalidArgumentException
      */
     private function getHttpClient()
     {
@@ -363,6 +412,8 @@ EOT
 
     /**
      * @return \Lib\Storage\Storage
+     *
+     * @throws \InvalidArgumentException
      */
     private function getStorage()
     {

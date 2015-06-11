@@ -1,15 +1,21 @@
 <?php
 namespace Commands;
 
+use Guzzle\Http\Exception\RequestException;
 use Lib\Config;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class SelfUpdateCommand extends Command 
-{   
+/**
+ * Class SelfUpdateCommand
+ *
+ * @package Commands
+ */
+class SelfUpdateCommand extends Command
+{
     /**
-     * {@inheritdoc}
+     * @throws \InvalidArgumentException
      */
     protected function configure()
     {
@@ -24,21 +30,30 @@ EOT
     }
 
     /**
-     * {@inheritdoc}
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @return int|null|void
+     *
+     * @throws \InvalidArgumentException
+     * @throws RequestException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $currentVersion = $this->getClientCurrentVersion();
         
-        $version = (float)$this->getClientLatestVersion(); 
+        $version = (float)$this->getClientLatestVersion();
                 
-        if ($currentVersion == $version) {
-            $this->outputMessage($output, '<info>You have the latest version of the log-tool client!</info>');            
+        if ($currentVersion === $version) {
+            $this->outputMessage($output, '<info>You have the latest version of the log-tool client!</info>');
         } elseif ($currentVersion > $version) {
-            $this->outputMessage($output, '<error>Sorry but the implementation of rollback has not yet implemented.</error>');
+            $this->outputMessage(
+                $output,
+                '<error>Sorry but the implementation of rollback has not yet implemented.</error>'
+            );
         }
         
-        $fileName = 'log-tool-client.phar'; 
+        $fileName = 'log-tool-client.phar';
         
         $return = false;
         
@@ -58,10 +73,10 @@ EOT
 
     /**
      * Function saves a new version of log tool client with the name log-tool-client.phar.
-     * 
+     *
      * @param string $fileName
      * @param string $fileData
-     * 
+     *
      * @return int
      */
     private function saveNewVersionClient($fileName, $fileData)
@@ -71,10 +86,12 @@ EOT
 
     /**
      * The function returns a new version log tool client.
-     * 
+     *
      * @return string
-     * 
+     *
+     * @throws RequestException
      * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      */
     private function getNewVersionClient()
     {
@@ -84,7 +101,7 @@ EOT
 
         $phar = $response->getBody(true);
         
-        if ($phar == '"false"') {
+        if ($phar === '"false"') {
             throw (new \RuntimeException('Unable to get a new version of the client.'));
         }
         
@@ -93,8 +110,9 @@ EOT
 
     /**
      * The function returns the number of the latest version of the client.
-     * 
+     *
      * @return float
+     * @throws \InvalidArgumentException
      */
     private function getClientCurrentVersion()
     {
@@ -103,27 +121,30 @@ EOT
     
     /**
      * The function gets the latest version of the client.
-     * 
+     *
      * @return bool
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
     private function getClientLatestVersion()
     {
         $url = $this->getApiUrl('client-latest-version');
 
-        $response = $this->getHttpClient()->get($url);
+        $request = $this->getHttpClient()->get($url);
 
-        $response->send();
+        $request->send();
 
-        $res = $response->getResponse();
+        $response = $request->getResponse();
 
         $return = false;
 
-        if ($res->getStatusCode() == 200) {
-            $return = json_decode($res->getBody(true))->version;
+        if ($response->isSuccessful()) {
+            $return = json_decode($response->getBody(true))->version;
         }
         
         return $return;
-    }    
+    }
     
     /**
      * The function returns the url by api url-name.
@@ -131,6 +152,8 @@ EOT
      * @param string $urlName
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     private function getApiUrl($urlName)
     {
@@ -145,6 +168,8 @@ EOT
 
     /**
      * @return \Guzzle\Http\Client
+     *
+     * @throws \InvalidArgumentException
      */
     private function getHttpClient()
     {
@@ -157,8 +182,10 @@ EOT
      * @param OutputInterface $output
      *
      * @param string $message
-     * 
+     *
      * @return bool
+     *
+     * @throws \InvalidArgumentException
      */
     private function outputMessage(OutputInterface $output, $message)
     {

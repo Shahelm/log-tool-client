@@ -1,6 +1,11 @@
 <?php
 namespace Lib\Storage;
 
+/**
+ * Class FileStorage
+ *
+ * @package Lib\Storage
+ */
 class FileStorage implements IStorage
 {
     /**
@@ -16,7 +21,7 @@ class FileStorage implements IStorage
     /**
      * @param string $filePath
      * @param string $fileName
-     * 
+     *
      * @throws \InvalidArgumentException
      */
     public function __construct($filePath, $fileName)
@@ -82,7 +87,7 @@ class FileStorage implements IStorage
 
             $return = file_put_contents($this->getFile(), $data);
                 
-            $return = is_numeric($return) ? true : false;;
+            $return = is_numeric($return) ? true : false;
         }
         
         return $return;
@@ -104,7 +109,7 @@ class FileStorage implements IStorage
 
     /**
      * The function returns the data from the file into an array, or an empty array if no data.
-     * 
+     *
      * @return array
      */
     private function getDataFromFile()
@@ -118,10 +123,10 @@ class FileStorage implements IStorage
         $string = file_get_contents($this->getFile());
         
         if (!empty($string)) {
-            $return = unserialize($string); 
+            $return = unserialize($string);
         }
         
-        return !empty($return) ? $return : array();
+        return 0 === count($return) ? $return : array();
     }
 
     /**
@@ -131,4 +136,4 @@ class FileStorage implements IStorage
     {
         return $this->filePath . DIRECTORY_SEPARATOR . $this->fileName;
     }
-} 
+}

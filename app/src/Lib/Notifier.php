@@ -1,34 +1,39 @@
 <?php
 namespace Lib;
 
-class Notifier 
+/**
+ * Class Notifier
+ *
+ * @package Lib
+ */
+class Notifier
 {
     /**
      * in milliseconds
-     * 
-     * @var int 
+     *
+     * @var int
      */
     private $expireTime;
 
     /**
      * Specifies the urgency level (low, normal, critical)
-     * 
+     *
      * This option belongs notify-send command from ubuntu kernel. (http://help.ubuntu.ru/wiki/notify-osd)
-     * 
+     *
      * @var string
      */
     private $urgency = 'critical';
     
     /**
      * Specifies an icon filename or stock icon to display.
-     * 
+     *
      * This option belongs notify-send command from ubuntu kernel. (http://help.ubuntu.ru/wiki/notify-osd)
-     * 
+     *
      * @var string
      */
     private $logoName = 'error';
 
-    public function __construct($expireTime) 
+    public function __construct($expireTime)
     {
         $this->expireTime = $expireTime;
     }
@@ -48,7 +53,11 @@ class Notifier
         
         $command .= '"' . $this->getTitle() . '" ';
         
-        $command .= '"' . $this->getMessage((int)$errorCount, (int)$numberOfErrorsForFiveMinutes, (int)$lastErrorTime) . '" ';
+        $command .= '"' . $this->getMessage(
+            (int)$errorCount,
+            (int)$numberOfErrorsForFiveMinutes,
+            (int)$lastErrorTime
+        ) . '" ';
         
         exec($command);
     }
@@ -65,7 +74,7 @@ class Notifier
     
     /**
      * The function returns the title to alert.
-     * 
+     *
      * @return string
      */
     private function getTitle()
@@ -96,11 +105,11 @@ class Notifier
 
     /**
      * The function prepares command line option for command notify-send.
-     * 
+     *
      * @return string
      */
     private function getOption()
     {
         return '-u ' . $this->urgency . ' -i ' . $this->logoName . ' ' . '-t '. $this->expireTime;
     }
-} 
+}

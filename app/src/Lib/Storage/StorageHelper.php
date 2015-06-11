@@ -3,7 +3,12 @@ namespace Lib\Storage;
 
 use Symfony\Component\Console\Helper\Helper;
 
-class StorageHelper extends Helper  
+/**
+ * Class StorageHelper
+ *
+ * @package Lib\Storage
+ */
+class StorageHelper extends Helper
 {
     /**
      * @var \Lib\Storage\Storage
@@ -32,8 +37,8 @@ class StorageHelper extends Helper
      */
     public function getStorage()
     {
-        if (is_null($this->storage)) {
-            $this->storage = new Storage(new FileStorage($this->storageDir,  $this->storageFileName));
+        if (null ===$this->storage) {
+            $this->storage = new Storage(new FileStorage($this->storageDir, $this->storageFileName));
         }
         
         return $this->storage;
@@ -50,4 +55,4 @@ class StorageHelper extends Helper
     {
         return 'storageHelper';
     }
-} 
+}
