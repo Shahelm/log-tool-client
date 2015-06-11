@@ -45,6 +45,11 @@ class StartCommand extends Command
      * @var int
      */
     private $pid;
+    
+    /**
+     * @var bool
+     */
+    private $debugMode;
 
     /**
      * @throws \InvalidArgumentException
@@ -79,6 +84,14 @@ class StartCommand extends Command
                     . $this->getConfig()->get('lifetime-popup-max') . ')',
                     $lifetimePopup = $this->getConfig()->get('lifetime-popup')
                 )
+                ,
+                new InputOption(
+                    'debug',
+                    null,
+                    InputOption::VALUE_OPTIONAL,
+                    'Enable debug mode.',
+                    false
+                )
             ))
             ->setHelp(<<<EOT
 The command to start the client.
@@ -112,12 +125,20 @@ EOT
 
         while (true) {
             if (false === $this->getStorage()->get('isEnabled')) {
+                if ($this->isDebug()) {
+                    $output->writeln('<info>Successful stop the process!</info>');
+                }
                 break;
             }
             
             try {
                 $numberOfErrorsForLastMinutes = $this->getErrorsForLastMinutes();
                 $numberOfErrorsForFiveMinutes = $this->getErrorsForLastFiveMinutes();
+
+                if ($this->isDebug()) {
+                    $output->writeln("<info>Minute: {$numberOfErrorsForLastMinutes}</info>");
+                    $output->writeln("<info>Five minute: {$numberOfErrorsForFiveMinutes}</info>");
+                }
 
                 if ($numberOfErrorsForLastMinutes >= $this->numberOfErrors) {
                     $notifier->notify(
@@ -131,7 +152,7 @@ EOT
                 
                 $errorOutput->writeln($e->getMessage());
             } catch (\Exception $e) {
-                $errorOutput->writeln('Fatal error: ' . $e->getMessage());
+                $errorOutput->writeln("Fatal error: {$e->getMessage()}");
                 $this->getStorage()->flushAll();
             }
             
@@ -152,6 +173,8 @@ EOT
 
         $this->lifeTimePopup = (int)$input->getOption('lifetime-popup');
 
+        $this->debugMode = (bool)$input->getOption('debug');
+        
         $osHelper = new OSHelper();
 
         $this->pid = $osHelper->getProcessId();
@@ -268,6 +291,14 @@ EOT
         }
         
         return $return;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isDebug()
+    {
+        return $this->debugMode;
     }
     
     /**

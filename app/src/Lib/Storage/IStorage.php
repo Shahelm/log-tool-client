@@ -23,7 +23,7 @@ interface IStorage
      *
      * @param string $key
      *
-     * @return mixed
+     * @return mixed|false - if error
      */
     public function get($key);
 

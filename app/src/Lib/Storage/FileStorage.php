@@ -58,7 +58,7 @@ class FileStorage implements IStorage
     {
         $data = $this->getDataFromFile();
         
-        return isset($data[$key]) ? $data[$key] : null;
+        return isset($data[$key]) ? $data[$key] : false;
     }
 
     /**
