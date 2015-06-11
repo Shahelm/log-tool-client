@@ -54,6 +54,16 @@ class Notifier
     }
 
     /**
+     * @return void
+     */
+    public function notifyServicesUnavailable()
+    {
+        $command = 'notify-send' . ' ' . $this->getOption() . ' ' . 'Log tool unavailable!';
+
+        exec($command);
+    }
+    
+    /**
      * The function returns the title to alert.
      * 
      * @return string

@@ -1,10 +1,12 @@
 <?php
 namespace Commands;
 
+use Guzzle\Http\Exception\ServerErrorResponseException;
 use Lib\Config;
 use Lib\Notifier;
 use Lib\OSHelper;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -61,7 +63,7 @@ class StartCommand extends Command
                     'lifetime-popup', null, InputOption::VALUE_OPTIONAL,
                     'Specifies the time in milliseconds notice will hang on the screen. (min values: '. $this->getConfig()->get('lifetime-popup-min') .', max values: ' . $this->getConfig()->get('lifetime-popup-max') . ')',
                     $lifetimePopup = $this->getConfig()->get('lifetime-popup')
-                ),
+                )
             ))
             ->setHelp(<<<EOT
 The command to start the client.
@@ -87,15 +89,25 @@ EOT
                 break;
             }
             
-            $numberOfErrorsForLastMinutes = $this->getErrorsForLastMinutes();
-            $numberOfErrorsForFiveMinutes = $this->getErrorsForLastFiveMinutes();
-            
-            if ($numberOfErrorsForLastMinutes >= $this->numberOfErrors) {
-                $notifier->notify(
-                    $numberOfErrorsForLastMinutes,
-                    $numberOfErrorsForFiveMinutes,
-                    $this->getLastErrorTime()
-                );
+            try {
+                $numberOfErrorsForLastMinutes = $this->getErrorsForLastMinutes();
+                $numberOfErrorsForFiveMinutes = $this->getErrorsForLastFiveMinutes();
+
+                if ($numberOfErrorsForLastMinutes >= $this->numberOfErrors) {
+                    $notifier->notify(
+                        $numberOfErrorsForLastMinutes,
+                        $numberOfErrorsForFiveMinutes,
+                        $this->getLastErrorTime()
+                    );
+                }
+            } catch (ServerErrorResponseException $e) {
+                $notifier->notifyServicesUnavailable();
+                
+                /**
+                 * @var ConsoleOutputInterface $output
+                 */
+                $errorOutput = $output->getErrorOutput();
+                $errorOutput->writeln($e->getMessage());
             }
             
             sleep($this->timeOut);
