@@ -47,8 +47,38 @@ class FileStorage implements IStorage
         $data = serialize($data);
         
         $return = file_put_contents($this->getFile(), $data);
+
+        return false !== $return;
+    }
+
+    /**
+     * The function returns the data from the file into an array, or an empty array if no data.
+     *
+     * @return array
+     */
+    private function getDataFromFile()
+    {
+        if (false === file_exists($this->getFile())) {
+            return array();
+        }
         
-        return is_numeric($return) ? true : false;
+        $return = array();
+        
+        $string = file_get_contents($this->getFile());
+        
+        if (false === empty($string)) {
+            $return = unserialize($string);
+        }
+
+        return count($return) > 0 ? $return : array();
+    }
+
+    /**
+     * @return string
+     */
+    private function getFile()
+    {
+        return $this->filePath . DIRECTORY_SEPARATOR . $this->fileName;
     }
 
     /**
@@ -80,7 +110,7 @@ class FileStorage implements IStorage
         
         $data = $this->getDataFromFile();
         
-        if (is_array($data) && isset($data[$key])) {
+        if (isset($data[$key])) {
             $data[$key] = $value;
 
             $data = serialize($data);
@@ -105,35 +135,5 @@ class FileStorage implements IStorage
         }
 
         return $return;
-    }
-
-    /**
-     * The function returns the data from the file into an array, or an empty array if no data.
-     *
-     * @return array
-     */
-    private function getDataFromFile()
-    {
-        if (!file_exists($this->getFile())) {
-            return array();
-        }
-        
-        $return = array();
-        
-        $string = file_get_contents($this->getFile());
-        
-        if (!empty($string)) {
-            $return = unserialize($string);
-        }
-        
-        return 0 === count($return) ? $return : array();
-    }
-
-    /**
-     * @return string
-     */
-    private function getFile()
-    {
-        return $this->filePath . DIRECTORY_SEPARATOR . $this->fileName;
     }
 }

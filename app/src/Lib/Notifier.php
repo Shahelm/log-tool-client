@@ -63,13 +63,13 @@ class Notifier
     }
 
     /**
-     * @return void
+     * The function prepares command line option for command notify-send.
+     *
+     * @return string
      */
-    public function notifyServicesUnavailable()
+    private function getOption()
     {
-        $command = 'notify-send' . ' ' . $this->getOption() . ' ' . 'Log tool unavailable!';
-
-        exec($command);
+        return '-u ' . $this->urgency . ' -i ' . $this->logoName . ' ' . '-t '. $this->expireTime;
     }
     
     /**
@@ -104,12 +104,12 @@ class Notifier
     }
 
     /**
-     * The function prepares command line option for command notify-send.
-     *
-     * @return string
+     * @return void
      */
-    private function getOption()
+    public function notifyServicesUnavailable()
     {
-        return '-u ' . $this->urgency . ' -i ' . $this->logoName . ' ' . '-t '. $this->expireTime;
+        $command = 'notify-send' . ' ' . $this->getOption() . ' ' . escapeshellarg('Log tool unavailable!');
+        
+        exec($command);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace Commands;
 
+use Guzzle\Http\Exception\CurlException;
 use Guzzle\Http\Exception\RequestException;
 use Guzzle\Http\Exception\ServerErrorResponseException;
 use Lib\Config;
@@ -100,6 +101,14 @@ EOT
     }
 
     /**
+     * @return Config
+     */
+    private function getConfig()
+    {
+        return Config::getInstance();
+    }
+
+    /**
      * @param InputInterface  $input
      * @param OutputInterface $output
      *
@@ -107,6 +116,7 @@ EOT
      *
      * @throws RequestException
      * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -148,22 +158,25 @@ EOT
                     );
                 }
             } catch (ServerErrorResponseException $e) {
-                $notifier->notifyServicesUnavailable();
-                
-                $errorOutput->writeln($e->getMessage());
+                $this->showServicesError($notifier, $errorOutput, $e);
+            } catch (CurlException $e) {
+                $this->showServicesError($notifier, $errorOutput, $e);
             } catch (\Exception $e) {
+                echo get_class($e), "\n";
                 $errorOutput->writeln("Fatal error: {$e->getMessage()}");
                 $this->getStorage()->flushAll();
+                break;
             }
             
             sleep($this->timeOut);
         }
     }
-
+    
     /**
      * @param $input
      *
      * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
     private function init(InputInterface $input)
     {
@@ -181,11 +194,29 @@ EOT
 
         $this->getStorage()->flushAll();
 
-        $this->getStorage()->save('isEnabled', true);
+        $isSaved = $this->getStorage()->save('isEnabled', true);
+        
+        if (false === $isSaved) {
+            throw new \RuntimeException('Failed to save the configuration.(isEnabled)');
+        }
 
-        $this->getStorage()->save('pid', $this->pid);
+        $isSaved = $this->getStorage()->save('pid', $this->pid);
+
+        if (false === $isSaved) {
+            throw new \RuntimeException('Failed to save the configuration.(isEnabled)');
+        }
     }
     
+    /**
+     * @return \Lib\Storage\Storage
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function getStorage()
+    {
+        return $this->getHelper('storageHelper')->getStorage();
+    }
+
     /**
      * The function returns true if all the conditions for starting are fulfilled.
      *
@@ -203,7 +234,7 @@ EOT
 
         return $return;
     }
-    
+
     /**
      * This function checks input data.
      *     time-out > self::MIN_TIME_OUT
@@ -275,7 +306,7 @@ EOT
         
         return $return;
     }
-
+    
     /**
      * The function checks whether it was possible to get the process id.
      *
@@ -293,14 +324,6 @@ EOT
         return $return;
     }
 
-    /**
-     * @return bool
-     */
-    private function isDebug()
-    {
-        return $this->debugMode;
-    }
-    
     /**
      * Function displays error messages and terminate the script.
      *
@@ -320,30 +343,11 @@ EOT
     }
 
     /**
-     * The function returns time of last error.
-     *
-     * @return int|bool(false)
-     *
-     * @throws RequestException
-     * @throws \InvalidArgumentException
+     * @return bool
      */
-    private function getLastErrorTime()
+    private function isDebug()
     {
-        $url = $this->getApiUrl('get-max-time');
-        
-        $response = $this->getHttpClient()->get($url);
-
-        $response->send();
-
-        $res = $response->getResponse();
-        
-        $return = false;
-        
-        if ($res->isSuccessful()) {
-            $return = json_decode($res->getBody(true))->sec;
-        }
-        
-        return $return;
+        return $this->debugMode;
     }
 
     /**
@@ -357,19 +361,6 @@ EOT
     public function getErrorsForLastMinutes()
     {
         return $this->getNumberOfErrors('PT1M');
-    }
-
-    /**
-     * The function returns the number of errors in the last five minute.
-     *
-     * @return int|bool(false)
-     *
-     * @throws RequestException
-     * @throws \InvalidArgumentException
-     */
-    public function getErrorsForLastFiveMinutes()
-    {
-        return $this->getNumberOfErrors('PT5M');
     }
     
     /**
@@ -434,20 +425,55 @@ EOT
     }
 
     /**
-     * @return Config
+     * The function returns the number of errors in the last five minute.
+     *
+     * @return int|bool(false)
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
      */
-    private function getConfig()
+    public function getErrorsForLastFiveMinutes()
     {
-        return Config::getInstance();
+        return $this->getNumberOfErrors('PT5M');
     }
 
     /**
-     * @return \Lib\Storage\Storage
+     * The function returns time of last error.
+     *
+     * @return int|bool(false)
+     *
+     * @throws RequestException
+     * @throws \InvalidArgumentException
+     */
+    private function getLastErrorTime()
+    {
+        $url = $this->getApiUrl('get-max-time');
+        
+        $response = $this->getHttpClient()->get($url);
+
+        $response->send();
+
+        $res = $response->getResponse();
+        
+        $return = false;
+        
+        if ($res->isSuccessful()) {
+            $return = json_decode($res->getBody(true))->sec;
+        }
+        
+        return $return;
+    }
+
+    /**
+     * @param Notifier $notifier
+     * @param OutputInterface $errorOutput
+     * @param \Exception $e
      *
      * @throws \InvalidArgumentException
      */
-    private function getStorage()
+    protected function showServicesError($notifier, $errorOutput, $e)
     {
-        return $this->getHelper('storageHelper')->getStorage();
+        $notifier->notifyServicesUnavailable();
+        $errorOutput->writeln($e->getMessage());
     }
 }
